@@ -1,6 +1,7 @@
 import m from 'mithril'
 import hub from './hub'
 import {Version, Node, Project, Schema, Model, Elem} from './model'
+import {EditorView} from "@codemirror/view"
 
 export interface Ctx {
 	proj?:Project
@@ -13,6 +14,7 @@ export class Man {
 	key = ""
 	qry = ""
 	res = ""
+	editor?:EditorView
 	constructor() {}
 	init(data:any) {
 		this.done = true

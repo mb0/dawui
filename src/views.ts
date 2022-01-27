@@ -2,6 +2,7 @@ import m from 'mithril'
 import {Component} from 'mithril'
 import {Man} from './ctx'
 import {Project, Schema, Model} from './model'
+import {Editor} from './editor'
 
 export const IndexView:Component<{man:Man, pr:Project}> = {
 	view({attrs:{man,pr}}) {
@@ -38,6 +39,7 @@ export const DetailView:Component<{man:Man, mod:Model}> = {
 	}
 }
 
+
 export const QueryView:Component<{man:Man}> = {
 	view({attrs:{man}}) {
 		return m('form', {onsubmit: (e:any) => {
@@ -47,10 +49,7 @@ export const QueryView:Component<{man:Man}> = {
 				return false
 			}},
 			m('h1', "Query"),
-			m('textarea', {cols:60, rows:15, spellcheck:false, oninput:(e:any) => {
-				e.redraw = false
-				man.qry = (e.srcElement as HTMLTextAreaElement).value
-			}}, man.qry),
+			m(Editor, {man}),
 			m('', m('button[type=submit]', 'Run')),
 			man.res ? m('textarea', {cols:60, rows:15, disabled:true}, man.res) : null
 		)

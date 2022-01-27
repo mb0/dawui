@@ -9,6 +9,7 @@
   "author": "mb0@mb0.org",
   "license": "BSD",
   "dependencies": {
+    "@codemirror/basic-setup": "^0.19.1",
     "core-js": "^3.20.3",
     "mithril": "^2.0.4"
   },
