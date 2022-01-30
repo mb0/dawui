@@ -1,13 +1,14 @@
 {
   "name": "dawui",
   "version": "0.0.0",
+  "private": true,
   "description": "daql web ui",
   "scripts": {
     "dev": "webpack --mode development --watch",
     "prod": "webpack --mode production --watch"
   },
   "author": "mb0@mb0.org",
-  "license": "BSD",
+  "license": "BSD-2-Clause",
   "dependencies": {
     "@codemirror/basic-setup": "^0.19.1",
     "core-js": "^3.20.3",
