@@ -1,6 +1,9 @@
 package dawui
 
 import (
+	"bytes"
+	"embed"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -13,18 +16,25 @@ import (
 	"xelf.org/xelf/lib/extlib"
 )
 
+//go:embed dist
+var distFS embed.FS
+
 type Server struct {
 	Dir    string
 	Data   string
 	Proj   *cmd.Project
 	Bend   qry.Backend
+	fssrv  http.Handler
 	hub    *hub.Hub
 	hubsrv http.Handler
 }
 
 func NewServer(dir, data string) (*Server, error) {
 	h := hub.NewHub(nil)
-	res := &Server{Dir: dir, Data: data, hub: h, hubsrv: wshub.NewServer(h)}
+	res := &Server{Dir: dir, Data: data,
+		fssrv: http.FileServer(http.FS(distFS)),
+		hub:   h, hubsrv: wshub.NewServer(h),
+	}
 	if dir != "" {
 		pr, err := cmd.LoadProject(dir)
 		if err != nil {
@@ -60,7 +70,6 @@ func (s *Server) query(m *hub.Msg) *hub.Msg {
 	if err != nil {
 		return m.ReplyErr(err)
 	}
-	log.Printf("got qry %s", raw)
 	el, err := exp.Read(s.Proj.Reg, strings.NewReader(raw), "input")
 	if err != nil {
 		return m.ReplyErr(err)
@@ -74,15 +83,19 @@ func (s *Server) query(m *hub.Msg) *hub.Msg {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	const root = "/home/mb0/work/dawui"
+	if strings.HasPrefix(r.URL.Path, "/dist/") {
+		s.fssrv.ServeHTTP(w, r)
+		return
+	}
 	switch path := r.URL.Path; path {
 	case "/favicon.ico":
 		http.Error(w, "not found", http.StatusNotFound)
-	case "/dist/main.bundle.js", "/dist/main.bundle.js.map":
-		http.ServeFile(w, r, root+path)
 	case "/hub":
 		s.hubsrv.ServeHTTP(w, r)
 	default:
-		http.ServeFile(w, r, root+"/dist/main.html")
+		raw, _ := distFS.ReadFile("dist/main.html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Content-Length", fmt.Sprint(len(raw)))
+		bytes.NewReader(raw).WriteTo(w)
 	}
 }
