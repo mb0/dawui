@@ -8,18 +8,23 @@ interface Man {
 	editor?:EditorView
 }
 
-export const Editor:Component<{man:Man}> = {
-	oncreate({attrs:{man}, dom}) {
+export const Editor:Component<{man:Man},{ed:EditorView}> = {
+	oncreate({attrs:{man}, dom, state}) {
 		if (!man.qry) man.qry = `(?prod.prod)`
-		let state = man.editor ? man.editor.state : EditorState.create({doc: man.qry, extensions: [
-			basicSetup,
-			EditorView.updateListener.of((v:ViewUpdate) => {
-				if (v.docChanged) {
-					man.qry = v.state.doc.toString()
-				}
-			}),
-		]})
-		man.editor = new EditorView({state, parent:dom})
+		state.ed = new EditorView({parent:dom, state: EditorState.create({
+			doc: man.qry,
+			extensions: [
+				basicSetup,
+				EditorView.updateListener.of((v:ViewUpdate) => {
+					if (v.docChanged) {
+						man.qry = v.state.doc.toString()
+					}
+				}),
+			],
+		})})
+	},
+	onremove({state:{ed}}) {
+		if (ed) ed.destroy()
 	},
 	view({}) {
 		return m('')

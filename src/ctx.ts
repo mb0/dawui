@@ -1,7 +1,6 @@
-import m from 'mithril'
 import hub from './hub'
 import {Version, Node, Project, Schema, Model, Elem} from './model'
-import {EditorView} from "@codemirror/view"
+import {scan} from 'xelf/ast'
 
 export interface Ctx {
 	proj?:Project
@@ -14,7 +13,6 @@ export class Man {
 	key = ""
 	qry = ""
 	res = ""
-	editor?:EditorView
 	constructor() {}
 	init(data:any) {
 		this.done = true
@@ -36,24 +34,15 @@ export class Man {
 			if (n) n.vers = v.vers
 		})
 	}
-	nav(...parts:string[]) {
-		const isQuery = m.route.param("view") == 'query'
-		let href = ''
-		return m('nav', parts.reduce((a, part:string, i:number) => {
-			href += '/' + part
-			const disabled = i == parts.length-1 && !isQuery
-			a.push(' > ', m(m.route.Link, {href, disabled}, part))
-			return a
-		}, [
-			m(m.route.Link, {href:'?view=query', disabled: isQuery}, 'Query'),
-			' | ',
-			m(m.route.Link, {href:'/'}, this.ctx.proj!.name),
-		]))
-	}
-	query(qry:string) {
-		hub.request("qry", qry).then(res => {
+	async query(qry:string) {
+		try {
+			scan(qry)
+			const res = await hub.request("qry", qry)
 			this.res = JSON.stringify(res)
-			m.redraw()
-		})
+			return res
+		} catch (e:any) {
+			this.res = e.message
+			throw e
+		}
 	}
 }
