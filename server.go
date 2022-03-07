@@ -14,6 +14,8 @@ import (
 	"xelf.org/daql/qry"
 	"xelf.org/xelf/exp"
 	"xelf.org/xelf/lib/extlib"
+	"xelf.org/xelf/lit"
+	"xelf.org/xelf/typ"
 )
 
 //go:embed dist
@@ -64,6 +66,11 @@ func (s *Server) Route(m *hub.Msg) {
 	}
 }
 
+type queryRes = struct {
+	Res lit.Val  `json:"res"`
+	Typ typ.Type `json:"typ"`
+}
+
 func (s *Server) query(m *hub.Msg) *hub.Msg {
 	var raw string
 	err := m.Unmarshal(&raw)
@@ -79,7 +86,7 @@ func (s *Server) query(m *hub.Msg) *hub.Msg {
 	if err != nil {
 		return m.ReplyErr(err)
 	}
-	return m.Reply(l)
+	return m.Reply(queryRes{l, l.Type()})
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
