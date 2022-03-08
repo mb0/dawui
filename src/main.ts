@@ -1,8 +1,7 @@
 import m from 'mithril'
 import {hub, hubUrl} from './hub'
 import {Man} from './ctx'
-import {Schema, Model} from './model'
-import {Layout, IndexView, SchemaView, ModelView, DetailView, QueryView} from './views'
+import {Layout, IndexView, SchemaView, ModelView, DetailView} from './views'
 
 hub.connect(hubUrl('/hub'))
 

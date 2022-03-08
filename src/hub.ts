@@ -90,11 +90,7 @@ export class Hub {
 			let req = this.nextReq()
 			let handler = (head:string, res?:any, tok?:number) => {
 				if (tok != req) return
-				if (res.err != null) {
-					reject(new Error(res.err))
-				} else {
-					resolve(res)
-				}
+				resolve(res)
 				this.off(head, handler)
 			}
 			this.on(head, handler)
@@ -138,7 +134,7 @@ export default hub
 export function hubUrl(path:string):string {
 	let url = location.protocol + "//" + location.host + path
 	if (url.startsWith("http")) {
-		url = "ws" + url.substr(4)
+		url = "ws" + url.slice(4)
 	}
 	return url
 }

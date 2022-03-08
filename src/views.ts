@@ -1,8 +1,10 @@
 import m from 'mithril'
 import {Component} from 'mithril'
-import {Man} from './ctx'
+import {Man, QryRes} from './ctx'
 import {Schema, Model} from './model'
 import {Editor} from './editor'
+import {typ, Type} from 'xelf/typ'
+import {knd} from 'xelf/knd'
 
 export const IndexView:Component<{man:Man}> = {
 	view({attrs:{man}}) {
@@ -33,7 +35,9 @@ export const ModelView:Component<{man:Man, node:string}> = {
 		const mod = man.ctx.map[node] as Model|null
 		if (!mod) return m('h1', `Model ${node} not found`)
 		return [m('h1', `Model ${mod.name} ${mod.vers}`),
-			m('ul', mod.elems.map(el => m('li', el.name, ' ', el.type))),
+			m('details', m('summary', "Model Details"),
+				m('ul', mod.elems.map(el => m('li', el.name, ' ', el.type))),
+			),
 		]
 	}
 }
@@ -43,6 +47,42 @@ export const DetailView:Component<{man:Man, node:string}> = {
 		const mod = man.ctx.map[node] as Model|null
 		if (!mod) return m('h1', `Model ${node} not found`)
 		return [m('h1', `Model ${mod.name} Detail ${man.key||''}`),
+		]
+	}
+}
+
+const isShort = (t:Type) => (t.kind&(knd.num|knd.bool)) != 0
+const isList = (t:Type) => (t.kind&(knd.list)) != 0
+const isStrc = (t:Type) => (t.kind&(knd.strc)) != 0
+
+const inlineRes = (r:QryRes) => m('', typ.toStr(r.typ!), ": ", JSON.stringify(r.res))
+
+const QueryResult:Component<{man:Man}> = {
+	view({attrs:{man}}) {
+		const r = man.res
+		if (!r) return null
+		if (r.err) return m('.err', r.err)
+		if (!r.typ) return m('textarea',
+			{cols:60, rows:15, disabled:true}, JSON.stringify(r.res),
+		)
+		// display short simple results inline
+		if (!r.res || isShort(r.typ)) return inlineRes(r)
+		if (isList(r.typ)) {
+			if (!Array.isArray(r.res)||!r.res.length) return inlineRes(r)
+			return [
+				m('', typ.toStr(r.typ)),
+				m('ul', r.res.map(el => m('li', JSON.stringify(el)))),
+			]
+		}
+		if (isStrc(r.typ)) {
+
+		}
+		// fallback to text area
+		return [
+			m('', typ.toStr(r.typ)),
+			m('textarea',
+				{cols:60, rows:15, disabled:true}, JSON.stringify(r.res),
+			),
 		]
 	}
 }
@@ -59,7 +99,7 @@ export const QueryView:Component<{man:Man}> = {
 			m('h1', "Query"),
 			m(Editor, {man}),
 			m('', m('button[type=submit]', 'Run')),
-			man.res && m('textarea', {cols:60, rows:15, disabled:true}, man.res)
+			m(QueryResult, {man}),
 		)
 	}
 }

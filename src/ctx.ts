@@ -1,10 +1,17 @@
 import hub from './hub'
 import {Version, Node, Project, Schema, Model, Elem} from './model'
 import {scan} from 'xelf/ast'
+import {Type, parseType} from 'xelf/typ'
 
 export interface Ctx {
 	proj?:Project
 	map:{[name:string]:Node}
+}
+
+export interface QryRes {
+	res?:any
+	typ?:Type
+	err?:string
 }
 
 export class Man {
@@ -12,7 +19,7 @@ export class Man {
 	done = false
 	key = ""
 	qry = ""
-	res = ""
+	res?:QryRes
 	constructor() {}
 	init(data:any) {
 		this.done = true
@@ -35,14 +42,12 @@ export class Man {
 		})
 	}
 	async query(qry:string) {
-		try {
-			scan(qry)
-			const res = await hub.request("qry", qry)
-			this.res = JSON.stringify(res)
-			return res
-		} catch (e:any) {
-			this.res = e.message
-			throw e
+		scan(qry)
+		let data = await hub.request("qry", qry)
+		if (typeof data.typ == "string") {
+			data.typ = parseType(scan(data.typ))
 		}
+		this.res = data
+		return this.res
 	}
 }
