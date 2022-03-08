@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"xelf.org/daql/cmd"
@@ -31,10 +33,14 @@ type Server struct {
 	hubsrv http.Handler
 }
 
-func NewServer(dir, data string) (*Server, error) {
+func NewServer(dir, data, static string) (*Server, error) {
 	h := hub.NewHub(nil)
+	var dist fs.FS = distFS
+	if static != "" {
+		dist = os.DirFS(static)
+	}
 	res := &Server{Dir: dir, Data: data,
-		fssrv: http.FileServer(http.FS(distFS)),
+		fssrv: http.FileServer(http.FS(dist)),
 		hub:   h, hubsrv: wshub.NewServer(h),
 	}
 	if dir != "" {
