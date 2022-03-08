@@ -1,0 +1,38 @@
+@top Doc { list<expr>? }
+
+val { Null | Bool | Num | Char | Typ | Idxr | Keyr }
+
+Typ  { "<" list<val>? ">" }
+Idxr { "[" list<val>? "]" }
+Keyr { "{" list<Tag>? "}" }
+Tupl { "(" list<expr>? ")" }
+Tag  { (Sym | Char) (":" val | ";") }
+expr { val | Tag | Sym | Tupl }
+
+@tokens {
+	Null  { "null" }
+	Bool  { "true" | "false" }
+	Num   { '-'? int frac? exp?}
+	int   { '0' | $[1-9] std.digit* }
+	frac  { '.' std.digit+ }
+	exp   { $[eE] $[+\-]? std.digit+ }
+
+	Char  { '"' (![\\\n"] | "\\" _)* '"' |
+		"'" (![\\\n'] | "\\" _)* "'" |
+		'`' (![`])* '`'
+	}
+
+	Sym   { '-'? symStart symPart* }
+	symStart { std.asciiLetter | $[#&%._=?!*+\-$\u{a1}-\u{10ff}/] }
+	symPart  { symStart | std.digit }
+
+	ws    { ($[ \n\r\t])+ } 
+	"(" ")" "{" "}" "[" "]" "<" ">"
+	@precedence { Null, Bool, Num, Sym}
+}
+
+@skip { ws }
+
+list<el> { el (","? el) }
+
+@detectDelim
