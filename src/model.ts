@@ -1,3 +1,6 @@
+import {parseKindName} from 'xelf/knd'
+import {scan} from 'xelf/ast'
+import {Type, parseType} from 'xelf/typ'
 
 export interface Version {
 	name:string
@@ -31,4 +34,13 @@ export interface Elem {
 	type:string
 	bits?:number
 	val?:number
+}
+
+export function modelType(m:Model):Type {
+	const kind = parseKindName(m.kind)
+	const params = m.elems.map(el => {
+		const elt = parseType(scan(el.type))
+		return {name:el.key.toLowerCase(), typ:elt}
+	})
+	return {kind, id:0, body:{name:m.qname, params}}
 }

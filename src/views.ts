@@ -1,9 +1,9 @@
 import m from 'mithril'
 import {Component} from 'mithril'
 import {Man, QryRes} from './ctx'
-import {Schema, Model} from './model'
+import {Schema, Model, modelType} from './model'
 import {Editor} from './editor'
-import {typ, Type} from 'xelf/typ'
+import {typ, Type, Param, ParamBody} from 'xelf/typ'
 import {knd} from 'xelf/knd'
 
 export const IndexView:Component<{man:Man}> = {
@@ -57,6 +57,31 @@ const isStrc = (t:Type) => (t.kind&(knd.strc)) != 0
 
 const inlineRes = (r:QryRes) => m('', typ.toStr(r.typ!), ": ", JSON.stringify(r.res))
 
+const getParams = (t:Type):ParamBody|null => t.body && 'params' in t.body ? t.body : null
+
+const table = (man:Man, t:Type, list:any[]) => {
+	if (!list||!list.length) return m('', "no data")
+	let pb = getParams(t)
+	if (pb && pb.name) {
+		const m = man.ctx.map[pb.name]
+		if (m) {
+			const mt = modelType(m as Model)
+			pb = getParams(mt)
+		}
+	}
+	if (!pb||!pb.params) return m('', "no fields")
+	return m('table',
+		m('tr', pb.params.map(p => m('th', p.name))),
+		list.map(el => m('tr', pb!.params.map((p:Param) => m('td', p.name ? tableCell(el[p.name.toLowerCase()]): '')))),
+	)
+}
+
+const tableCell = (val:any):string => {
+	if (val == null) return ''
+	if (typeof val == 'object') return JSON.stringify(val)
+	return ''+val
+}
+
 const QueryResult:Component<{man:Man}> = {
 	view({attrs:{man}}) {
 		const r = man.res
@@ -69,13 +94,23 @@ const QueryResult:Component<{man:Man}> = {
 		if (!r.res || isShort(r.typ)) return inlineRes(r)
 		if (isList(r.typ)) {
 			if (!Array.isArray(r.res)||!r.res.length) return inlineRes(r)
+			if (r.typ.body && 'el' in r.typ.body && isStrc(r.typ.body.el)) {
+				let elt = r.typ.body.el
+				return [
+					m('', typ.toStr(r.typ)),
+					table(man, elt, r.res)
+				]
+			}
 			return [
 				m('', typ.toStr(r.typ)),
 				m('ul', r.res.map(el => m('li', JSON.stringify(el)))),
 			]
 		}
 		if (isStrc(r.typ)) {
-
+			return [
+				m('', typ.toStr(r.typ)),
+				table(man, r.typ, [r.res]),
+			]
 		}
 		// fallback to text area
 		return [
