@@ -8,6 +8,15 @@ export interface Ctx {
 	map:{[name:string]:Node}
 }
 
+const addModel = (ctx:Ctx, m:Model) => {
+	m.key = m.name.toLowerCase()
+	m.qname = m.schema+'.'+m.name
+	ctx.map[m.qname] = m
+	if (m.elems) m.elems.forEach((e:Elem) => {
+		e.key = (e.name||'').toLowerCase()
+	})
+}
+
 export interface QryRes {
 	res?:any
 	typ?:Type
@@ -27,19 +36,26 @@ export class Man {
 		if (data.name) this.ctx.map['_'+data.name] = data
 		if (data.schemas) data.schemas.forEach((s:Schema) => {
 			this.ctx.map[s.name] = s
-			if (s.models) s.models.forEach((m:Model) => {
-				m.key = m.name.toLowerCase()
-				m.qname = m.schema+'.'+m.name
-				this.ctx.map[m.qname] = m
-				if (m.elems) m.elems.forEach((e:Elem) => {
-					e.key = (e.name||'').toLowerCase()
-				})
-			})
+			if (s.models) s.models.forEach((m:Model) => addModel(this.ctx, m))
 		})
 		if (data.manifest) data.manifest.forEach((v:Version) => {
 			let n = this.ctx.map[v.name]
 			if (n) n.vers = v.vers
 		})
+		let doms:Schema = {name: "dom", vers:"", models: [
+			{name:"Schema", qname:"", vers:"", key:"", schema:"dom", kind:"<obj>", elems:[
+				{name:"Name", key:"", type:"<str>"},
+				{name:"Models", key:"", type:"<list|@dom.Model>"},
+			]},
+			{name:"Model", qname:"", vers:"", key:"", schema:"dom", kind:"<obj>", elems:[
+				{name:"Kind", key:"kind", type:"<typ>"},
+				{name:"Name", key:"name", type:"<str>"},
+				{name:"Schema", key:"schema", type:"<str>"},
+				{name:"Elems", key:"elems", type:"<list|@dom.Elem>"},
+			]},
+		]}
+		this.ctx.map["dom"] = doms
+		doms.models.forEach((m:Model) => addModel(this.ctx, m))
 	}
 	async query(qry:string) {
 		scan(qry)
