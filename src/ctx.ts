@@ -66,4 +66,13 @@ export class Man {
 		this.res = data
 		return this.res
 	}
+	completions() {
+		let res:any[] = []
+		if (this.ctx.proj) this.ctx.proj.schemas.forEach(s => {
+			s.models.forEach(m => {
+				res.push({label:m.qname.toLowerCase(), type:"namespace"})
+			})
+		})
+		return res
+	}
 }
