@@ -1,7 +1,7 @@
 import m from 'mithril'
 import {Component} from 'mithril'
 import {Man, QryRes} from './ctx'
-import {Schema, Model, modelType} from './model'
+import {Schema, Model, modelType} from './dom'
 import {Editor} from './editor'
 import {typ, Type, Param, ParamBody} from 'xelf/typ'
 import {knd} from 'xelf/knd'
@@ -36,7 +36,7 @@ export const ModelView:Component<{man:Man, node:string}> = {
 		if (!mod) return m('h1', `Model ${node} not found`)
 		return [m('h1', `Model ${mod.name} ${mod.vers}`),
 			m('details', m('summary', "Model Details"),
-				m('ul', mod.elems.map(el => m('li', el.name, ' ', el.type))),
+				m('ul', mod.elems.map(el => m('li', el.name, ' ', typ.toStr(el.type)))),
 			),
 		]
 	}

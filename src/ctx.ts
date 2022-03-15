@@ -1,5 +1,6 @@
 import hub from './hub'
-import {Version, Node, Project, Schema, Model, Elem} from './model'
+import {Node, Project, Schema, Model, ProjectOpt, makeProject, makeSchema} from './dom'
+import {Version} from './mig'
 import {scan} from 'xelf/ast'
 import {Type, parseType} from 'xelf/typ'
 
@@ -8,19 +9,14 @@ export interface Ctx {
 	map:{[name:string]:Node}
 }
 
-const addModel = (ctx:Ctx, m:Model) => {
-	m.key = m.name.toLowerCase()
-	m.qname = m.schema+'.'+m.name
-	ctx.map[m.qname] = m
-	if (m.elems) m.elems.forEach((e:Elem) => {
-		e.key = (e.name||'').toLowerCase()
-	})
-}
-
 export interface QryRes {
 	res?:any
 	typ?:Type
 	err?:string
+}
+
+interface InitData extends ProjectOpt {
+	manifest?:Version[]
 }
 
 export class Man {
@@ -30,32 +26,31 @@ export class Man {
 	qry = ""
 	res?:QryRes
 	constructor() {}
-	init(data:any) {
+	init(data:InitData) {
 		this.done = true
-		this.ctx.proj = data
-		if (data.name) this.ctx.map['_'+data.name] = data
-		if (data.schemas) data.schemas.forEach((s:Schema) => {
+		const proj = makeProject(data)
+		proj.schemas.push(makeSchema({name: "dom", models: [
+			{name:"Schema", elems:[
+				{name:"Name", type:"<str>"},
+				{name:"Models", type:"<list|@dom.Model>"},
+			]},
+			{name:"Model", elems:[
+				{name:"Kind", type:"<typ>"},
+				{name:"Name", type:"<str>"},
+				{name:"Schema", type:"<str>"},
+				{name:"Elems", type:"<list|@dom.Elem>"},
+			]},
+		]}))
+		this.ctx.proj = proj
+		this.ctx.map['_'+proj.name] = proj
+		proj.schemas.forEach((s:Schema) => {
 			this.ctx.map[s.name] = s
-			if (s.models) s.models.forEach((m:Model) => addModel(this.ctx, m))
+			if (s.models) s.models.forEach((m:Model) => this.ctx.map[m.qname] = m)
 		})
 		if (data.manifest) data.manifest.forEach((v:Version) => {
 			let n = this.ctx.map[v.name]
 			if (n) n.vers = v.vers
 		})
-		let doms:Schema = {name: "dom", vers:"", models: [
-			{name:"Schema", qname:"", vers:"", key:"", schema:"dom", kind:"<obj>", elems:[
-				{name:"Name", key:"", type:"<str>"},
-				{name:"Models", key:"", type:"<list|@dom.Model>"},
-			]},
-			{name:"Model", qname:"", vers:"", key:"", schema:"dom", kind:"<obj>", elems:[
-				{name:"Kind", key:"kind", type:"<typ>"},
-				{name:"Name", key:"name", type:"<str>"},
-				{name:"Schema", key:"schema", type:"<str>"},
-				{name:"Elems", key:"elems", type:"<list|@dom.Elem>"},
-			]},
-		]}
-		this.ctx.map["dom"] = doms
-		doms.models.forEach((m:Model) => addModel(this.ctx, m))
 	}
 	async query(qry:string) {
 		scan(qry)
