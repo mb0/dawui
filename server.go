@@ -10,10 +10,10 @@ import (
 	"os"
 	"strings"
 
-	"xelf.org/daql/cmd"
 	"xelf.org/daql/hub"
 	"xelf.org/daql/hub/wshub"
 	"xelf.org/daql/qry"
+	"xelf.org/daql/xps/cmd"
 	"xelf.org/xelf/exp"
 	"xelf.org/xelf/lib/extlib"
 	"xelf.org/xelf/lit"
@@ -50,7 +50,7 @@ func NewServer(dir, data, static string) (*Server, error) {
 		}
 		res.Proj = pr
 		if data != "" {
-			d, err := cmd.OpenData(pr, data)
+			d, err := qry.Open(pr.Project, data)
 			if err != nil {
 				return nil, err
 			}
@@ -83,16 +83,16 @@ func (s *Server) query(m *hub.Msg) *hub.Msg {
 	if err != nil {
 		return m.ReplyErr(err)
 	}
-	el, err := exp.Read(s.Proj.Reg, strings.NewReader(raw), "input")
+	el, err := exp.Read(strings.NewReader(raw), "input")
 	if err != nil {
 		return m.ReplyErr(err)
 	}
 	q := qry.New(s.Proj.Reg, extlib.Std, s.Bend)
-	l, err := q.ExecExp(nil, el, nil)
+	v, err := q.ExecExp(nil, el, nil)
 	if err != nil {
 		return m.ReplyErr(err)
 	}
-	return m.Reply(queryRes{l, l.Type()})
+	return m.Reply(queryRes{v, v.Type()})
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
