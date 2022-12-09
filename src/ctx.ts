@@ -1,6 +1,6 @@
-import hub from './hub'
-import {Node, Project, Schema, Model, ProjectOpt, makeProject, makeSchema} from './dom'
-import {Version} from './mig'
+import hub from 'daql/hub'
+import {Node, Project, Schema, Model, ProjectOpt, makeProject, makeSchema} from 'daql/dom'
+import {Version} from 'daql/mig'
 import {scan} from 'xelf/ast'
 import {Type, parseType} from 'xelf/typ'
 

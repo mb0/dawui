@@ -2,7 +2,7 @@
 
 val { Null | Bool | Num | Char | Typ | Idxr | Keyr }
 
-Typ  { "<" list<val>? ">" }
+Typ  { "<" list<expr>? ">" }
 Idxr { "[" list<val>? "]" }
 Keyr { "{" list<Tag>? "}" }
 Tupl { "(" list<expr>? ")" }

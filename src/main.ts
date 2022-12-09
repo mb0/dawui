@@ -1,40 +1,31 @@
-import m from 'mithril'
-import {hub, hubUrl} from './hub'
+import {indexView, schemaView, modelView} from './views/dom'
+import {h} from './h'
+import {hub, hubUrl} from 'daql/hub'
+import {app} from './app'
 import {Man} from './ctx'
-import {Layout, IndexView, SchemaView, ModelView, DetailView} from './views'
+import {router as r} from './rout'
+import {layout} from './views/layout'
 
+document.body.replaceChildren(app.el)
 hub.connect(hubUrl('/hub'))
-
 const man:Man = new Man()
 
 hub.on("hello", (_, data) => {
 	man.init(data)
-	m.redraw()
+	app.redraw()
 })
-
-m.route.prefix = ''
-let app = document.getElementById('app')
-m.route(app!, '/', {
-	'/': {render() {
-		return m(Layout, {man, path: []},
-			m(IndexView, {man}),
-		)
-	}},
-	'/:schema': {render({attrs:{schema}}) {
-		return m(Layout, {man, path: [schema]},
-			m(SchemaView, {man, node:schema}),
-		)
-	}},
-	'/:schema/:model': {render({attrs:{schema, model}}) {
-		const node = schema +'.'+ model
-		return m(Layout, {man, path: [schema, model]},
-			m(ModelView, {man, node}),
-		)
-	}},
-	'/:schema/:model/:key': {render({attrs:{schema, model}}) {
-		const node = schema +'.'+ model
-		return m(Layout, {man, path: [schema, model]},
-			m(DetailView, {man, node}),
-		)
-	}},
+r.addAll({
+	'/': () => app.mount(layout(man,
+		[], indexView(man)
+	)),
+	'/*': (schema:string) => app.mount(layout(man,
+		[schema], schemaView(man, schema)
+	)),
+	'/*/*': (schema:string, model:string) => app.mount(layout(man,
+		[schema, model], modelView(man, schema+'.'+model)
+	)),
+	'/*/*/*': (...args:string[]) => app.mount(layout(man,
+		args, ()=> h('p', 'entry '+args.join('.'))
+	)),
 })
+r.start('/', true)
