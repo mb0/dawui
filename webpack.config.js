@@ -22,7 +22,18 @@ module.exports = {
 			'node_modules',
 		]
 	},
-	devtool: "cheap-module-source-map",
+	devtool: 'cheap-module-source-map',
 	stats: {assets:true, modules:false, children:false},
-	optimization: {usedExports: true},
+	optimization: {
+		splitChunks: {
+			usedExports: true,
+			cacheGroups: {
+				defaultVendors: {
+					test: /[\\/]node_modules[\\/]@?(codemirror|lezer)/,
+					name: 'vendor',
+					chunks: 'initial',
+				}
+			},
+		}
+	},
 }
