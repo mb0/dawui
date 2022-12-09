@@ -10,10 +10,10 @@ import (
 	"os"
 	"strings"
 
+	"xelf.org/daql"
 	"xelf.org/daql/hub"
 	"xelf.org/daql/hub/wshub"
 	"xelf.org/daql/qry"
-	"xelf.org/daql/xps/cmd"
 	"xelf.org/xelf/exp"
 	"xelf.org/xelf/lib/extlib"
 	"xelf.org/xelf/lit"
@@ -26,7 +26,7 @@ var distFS embed.FS
 type Server struct {
 	Dir    string
 	Data   string
-	Proj   *cmd.Project
+	Proj   *daql.Project
 	Bend   qry.Backend
 	fssrv  http.Handler
 	hub    *hub.Hub
@@ -44,7 +44,7 @@ func NewServer(dir, data, static string) (*Server, error) {
 		hub:   h, hubsrv: wshub.NewServer(h),
 	}
 	if dir != "" {
-		pr, err := cmd.LoadProject(dir)
+		pr, err := daql.LoadProject(dir)
 		if err != nil {
 			return nil, err
 		}

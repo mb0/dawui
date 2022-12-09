@@ -1,3 +1,5 @@
-{name:'dawui' cmds:{
-	'':'Starts a web interface for a daql project.'
+{name:'dawui' caps:{
+	cmds:{
+		'':'Starts a web interface for a daql project.'
+	}
 }}
