@@ -25,7 +25,6 @@ var distFS embed.FS
 
 type Server struct {
 	Dir    string
-	Data   string
 	Proj   *daql.Project
 	Bend   qry.Backend
 	fssrv  http.Handler
@@ -33,29 +32,15 @@ type Server struct {
 	hubsrv http.Handler
 }
 
-func NewServer(dir, data, static string) (*Server, error) {
+func NewServer(dir string, pr *daql.Project, bend qry.Backend, static string) (*Server, error) {
 	h := hub.NewHub(nil)
 	var dist fs.FS = distFS
 	if static != "" {
 		dist = os.DirFS(static)
 	}
-	res := &Server{Dir: dir, Data: data,
+	res := &Server{Dir: dir, Proj: pr, Bend: bend,
 		fssrv: http.FileServer(http.FS(dist)),
 		hub:   h, hubsrv: wshub.NewServer(h),
-	}
-	if dir != "" {
-		pr, err := daql.LoadProject(dir)
-		if err != nil {
-			return nil, err
-		}
-		res.Proj = pr
-		if data != "" {
-			d, err := qry.Open(pr.Project, data)
-			if err != nil {
-				return nil, err
-			}
-			res.Bend = d.Backend
-		}
 	}
 	go h.Run(res)
 	return res, nil
