@@ -68,12 +68,7 @@ func (s *Server) query(m *hub.Msg) *hub.Msg {
 	if err != nil {
 		return m.ReplyErr(err)
 	}
-	el, err := exp.Read(strings.NewReader(raw), "input")
-	if err != nil {
-		return m.ReplyErr(err)
-	}
-	q := qry.New(s.Proj.Reg, extlib.Std, s.Bend)
-	v, err := q.ExecExp(nil, el, nil)
+	v, err := exp.NewProg(qry.NewDoc(extlib.Std, s.Bend)).RunStr(raw, nil)
 	if err != nil {
 		return m.ReplyErr(err)
 	}
