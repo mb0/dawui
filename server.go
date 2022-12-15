@@ -27,7 +27,7 @@ type Server struct {
 	Dir    string
 	Proj   *daql.Project
 	Bend   qry.Backend
-	fssrv  http.Handler
+	dist   fs.FS
 	hub    *hub.Hub
 	hubsrv http.Handler
 }
@@ -39,8 +39,8 @@ func NewServer(dir string, pr *daql.Project, bend qry.Backend, static string) (*
 		dist = os.DirFS(static)
 	}
 	res := &Server{Dir: dir, Proj: pr, Bend: bend,
-		fssrv: http.FileServer(http.FS(dist)),
-		hub:   h, hubsrv: wshub.NewServer(h),
+		dist: dist,
+		hub:  h, hubsrv: wshub.NewServer(h),
 	}
 	go h.Run(res)
 	return res, nil
@@ -77,16 +77,19 @@ func (s *Server) query(m *hub.Msg) *hub.Msg {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/dist/") {
-		s.fssrv.ServeHTTP(w, r)
+		http.FileServer(http.FS(s.dist)).ServeHTTP(w, r)
 		return
 	}
 	switch path := r.URL.Path; path {
 	case "/favicon.ico":
-		http.Error(w, "not found", http.StatusNotFound)
+		raw, _ := fs.ReadFile(s.dist, "dist/favicon.ico")
+		w.Header().Set("Content-Type", "image/x-icon")
+		w.Header().Set("Content-Length", fmt.Sprint(len(raw)))
+		bytes.NewReader(raw).WriteTo(w)
 	case "/hub":
 		s.hubsrv.ServeHTTP(w, r)
 	default:
-		raw, _ := distFS.ReadFile("dist/main.html")
+		raw, _ := fs.ReadFile(s.dist, "dist/main.html")
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Content-Length", fmt.Sprint(len(raw)))
 		bytes.NewReader(raw).WriteTo(w)

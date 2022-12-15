@@ -44,7 +44,7 @@ interface Man {
 }
 
 export const editor = (man:Man) => {
-	if (!man.qry) man.qry = `(*dom.model asc:schema asc:name lim:50 _:(.schema '.' .name))`
+	if (!man.qry) man.qry = `(*dom.model asc:schema asc:name lim:50 _:(.schema + '.' .name))`
 	const xelf = new LanguageSupport(xelfLang, [
 		xelfLang.data.of({autocomplete: completeFromList(man.completions())}),
 	])

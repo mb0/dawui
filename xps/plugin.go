@@ -28,6 +28,7 @@ func Cmd(ctx *xps.CmdCtx) error {
 	}
 	var bend qry.Backend
 	if data != "" {
+		ctx.Manifests()
 		plugBends := prov.NewPlugBackends(&ctx.Plugs)
 		bend, err = plugBends.Provide(data, pr.Project)
 		if err != nil {

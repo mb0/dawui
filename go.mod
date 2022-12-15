@@ -3,8 +3,8 @@ module xelf.org/dawui
 go 1.17
 
 require (
-	xelf.org/daql v0.0.0-20221209073634-cc0a4c87268e
-	xelf.org/xelf v0.0.0-20221209064811-42a4aa046057
+	xelf.org/daql v0.0.0-20221215120630-31edfd221939
+	xelf.org/xelf v0.0.0-20221214190218-1d315bacae96
 )
 
 require (
