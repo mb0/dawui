@@ -1,8 +1,9 @@
 import hub from 'daql/hub'
-import {Node, Project, Schema, Model, ProjectOpt, makeProject, makeSchema} from 'daql/dom'
+import {Node, Project, Schema, Model, ProjectOpt, makeProject, modelType} from 'daql/dom'
 import {Version} from 'daql/mig'
 import {scan} from 'xelf/ast'
 import {Type, parseType} from 'xelf/typ'
+import {select as typSelect} from 'xelf/typ/sel'
 
 export interface Ctx {
 	proj?:Project
@@ -29,18 +30,6 @@ export class Man {
 	init(data:InitData) {
 		this.done = true
 		const proj = makeProject(data)
-		proj.schemas.push(makeSchema({name: "dom", models: [
-			{name:"Schema", elems:[
-				{name:"Name", type:"<str>"},
-				{name:"Models", type:"<list|@dom.Model>"},
-			]},
-			{name:"Model", elems:[
-				{name:"Kind", type:"<typ>"},
-				{name:"Name", type:"<str>"},
-				{name:"Schema", type:"<str>"},
-				{name:"Elems", type:"<list|@dom.Elem>"},
-			]},
-		]}))
 		this.ctx.proj = proj
 		this.ctx.map['_'+proj.name] = proj
 		proj.schemas.forEach((s:Schema) => {
@@ -69,5 +58,17 @@ export class Man {
 			})
 		})
 		return res
+	}
+}
+
+export function lookup(ctx:Ctx):(ref:string)=>Type|null {
+	return ref => {
+		const m = /^([a-z_][a-z0-9_]+[.][^.\/]+)([.\/].*)?$/.exec(ref)
+		if (!m) return null
+		const model = ctx.map[m[1]]
+		if (!model) return null
+		const t = modelType(model as Model)
+		if (!m[2]) return t
+		return typSelect(t, m[2])
 	}
 }

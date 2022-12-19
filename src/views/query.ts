@@ -1,9 +1,9 @@
 import {app} from '../app'
 import {h} from '../h'
-import {Type, Param, ParamBody, knd, typ} from 'xelf/typ'
+import {Type, Param, ParamBody, knd, typ, Sys} from 'xelf/typ'
 import {Model, modelType} from 'daql/dom'
 import {editor} from '../editor'
-import {Man, QryRes} from '../ctx'
+import {lookup, Man, QryRes} from '../ctx'
 
 export const queryView = (man:Man) => ()=> {
 	return h('form', {onsubmit: (e:any) => {
@@ -28,6 +28,10 @@ const queryResult = (man:Man) => ()=> {
 	if (!r.typ) return h('textarea',
 		{cols:60, rows:15, disabled:true}, JSON.stringify(r.res),
 	)
+	// instantiate type and resolve type refs to schema models
+	const sys = new Sys()
+	const lup = lookup(man.ctx)
+	r.typ = sys.inst(lup, r.typ)
 	// display short simple results inline
 	if (!r.res || isShort(r.typ)) return inlineRes(r)
 	if (isList(r.typ)) {
