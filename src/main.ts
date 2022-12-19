@@ -6,7 +6,7 @@ import {Man} from './ctx'
 import {router as r} from './rout'
 import {layout} from './views/layout'
 
-document.body.replaceChildren(app.el)
+document.querySelector("#app")!.replaceChildren(app.el)
 hub.connect(hubUrl('/hub'))
 const man:Man = new Man()
 
